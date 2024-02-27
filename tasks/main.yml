@@ -1,0 +1,28 @@
+---
+
+- name: Capture VM current config
+  ansible.builtin.shell:
+    cmd: >
+      /usr/sbin/qm config "{{ proxmox_vm_id }}" --current | sort
+  changed_when: false
+  register: vm_config_current
+
+- name: Capture VM startup config
+  ansible.builtin.shell:
+    cmd: >
+      /usr/sbin/qm config "{{ proxmox_vm_id }}" | sort
+  changed_when: false
+  register: vm_config_startup
+
+- name: Show current config
+  ansible.builtin.debug:
+    msg: "{{ vm_config_current }}"
+
+- name: Show startup config
+  ansible.builtin.debug:
+    msg: "{{ vm_config_startup }}"
+
+- name: Restart VM
+  ansible.builtin.shell:
+    cmd: qm reboot --timeout 120 "{{ proxmox_vm_id }}"
+  when: "vm_config_current.stdout != vm_config_startup.stdout"
